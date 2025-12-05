@@ -2,7 +2,7 @@
   "$schema": "https://rcade.dev/manifest.schema.json",
   "name": "CAstroid",
   "display_name": "CAstroid",
-  "description": "Spinner demo",
+  "description": "Breakout clone with spinner controls - break all the bricks!",
   "visibility": "public",
   "authors": {
     "display_name": "Brett"

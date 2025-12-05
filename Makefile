@@ -7,9 +7,11 @@ SRC = src/main.cpp sdk/cpp/src/canvas.cpp sdk/cpp/src/input.cpp
 # Output directory
 BUILD_DIR = build
 DIST_DIR = dist
+PUBLIC_DIR = public
 
 # Output files
 OUTPUT = $(BUILD_DIR)/main.js
+PUBLIC_OUTPUT = $(PUBLIC_DIR)/main.js
 
 # Compiler flags
 EMCC_FLAGS = -s WASM=1 \
@@ -40,17 +42,16 @@ dev: clean
 	@mkdir -p $(BUILD_DIR)
 	$(EMCC) $(SRC) $(DEV_FLAGS) -o $(OUTPUT)
 
-# Production build
+# Production build (outputs to public/ for Vite to serve as static assets)
 .PHONY: build
-build: clean
-	@mkdir -p $(DIST_DIR)
-	$(EMCC) $(SRC) $(PROD_FLAGS) -o $(DIST_DIR)/main.js
-	@cp index.html $(DIST_DIR)/
+build:
+	@mkdir -p $(PUBLIC_DIR)
+	$(EMCC) $(SRC) $(PROD_FLAGS) -o $(PUBLIC_OUTPUT)
 
 # Clean build artifacts
 .PHONY: clean
 clean:
-	@rm -rf $(BUILD_DIR) $(DIST_DIR)
+	@rm -rf $(BUILD_DIR) $(DIST_DIR) $(PUBLIC_DIR)
 
 # Serve with Python (for local testing)
 .PHONY: serve

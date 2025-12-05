@@ -161,10 +161,16 @@ public:
                          const char* type, int player);
 
     /**
+     * Set spinner resolution (called internally via JavaScript callback)
+     * Do not call this manually unless you're implementing custom input handling
+     */
+    void setSpinnerResolution(int step_resolution);
+
+    /**
      * Update spinner state (called internally via JavaScript callback)
      * Do not call this manually unless you're implementing custom input handling
      */
-    void updateSpinners(int spinner1_step_delta, int spinner2_step_delta, int step_resolution);
+    void updateSpinners(int spinner1_step_delta, int spinner2_step_delta);
 
 private:
     PlayerInput player1_;

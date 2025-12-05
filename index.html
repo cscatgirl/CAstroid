@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CAstroid</title>
+    <title>{{display_name}}</title>
     <style>
         * {
             margin: 0;
@@ -31,15 +31,7 @@
 </head>
 
 <body>
-    <script src="main.js"></script>
-    <script>
-        window.Module = {};
-        createModule(window.Module).then(Module => {
-            console.log('Module loaded successfully');
-        }).catch(err => {
-            console.error('Failed to load module:', err);
-        });
-    </script>
+    <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>

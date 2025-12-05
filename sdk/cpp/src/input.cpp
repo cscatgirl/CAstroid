@@ -55,13 +55,18 @@ extern "C" {
     }
 
     EMSCRIPTEN_KEEPALIVE
+    void rcade_set_spinner_resolution(int step_resolution) {
+        if (!g_inputInstance) return;
+        g_inputInstance->setSpinnerResolution(step_resolution);
+    }
+
+    EMSCRIPTEN_KEEPALIVE
     void rcade_update_spinners(
         int spinner1_step_delta,
-        int spinner2_step_delta,
-        int step_resolution
+        int spinner2_step_delta
     ) {
         if (!g_inputInstance) return;
-        g_inputInstance->updateSpinners(spinner1_step_delta, spinner2_step_delta, step_resolution);
+        g_inputInstance->updateSpinners(spinner1_step_delta, spinner2_step_delta);
     }
 }
 
@@ -76,8 +81,10 @@ void Input::setupPlugin() {
         // Setup input handling with RCade input-classic plugin
         (async function() {
             try {
-                const { PluginChannel } = await import('/build/main.js');
-                const channel = await PluginChannel.acquire('@rcade/input-classic', '^1.0.0');
+                if (!window.PluginChannel) {
+                    throw new Error('PluginChannel not available');
+                }
+                const channel = await window.PluginChannel.acquire('@rcade/input-classic', '^1.0.0');
 
                 channel.getPort().onmessage = (event) => {
                     const { type, player, button, pressed } = event.data;
@@ -119,22 +126,38 @@ void Input::setupPlugin() {
 
             // Setup spinner input plugin
             try {
-                const { PluginChannel } = await import('/build/main.js');
-                const spinnerChannel = await PluginChannel.acquire('@rcade/input-spinners', '^1.0.0');
+                if (!window.PluginChannel) {
+                    throw new Error('PluginChannel not available');
+                }
+                const spinnerChannel = await window.PluginChannel.acquire('@rcade/input-spinners', '^1.0.0');
 
+                // Request initial config to get step_resolution
+                const configPromise = new Promise((resolve) => {
+                    const configNonce = Math.random();
+                    const handler = (event) => {
+                        if (event.data._nonce === configNonce) {
+                            spinnerChannel.getPort().removeEventListener('message', handler);
+                            resolve(event.data.step_resolution || 64);
+                        }
+                    };
+                    spinnerChannel.getPort().addEventListener('message', handler);
+                    spinnerChannel.getPort().postMessage({ type: 'get_config', _nonce: configNonce });
+                });
+
+                // Get step resolution once
+                const stepResolution = await configPromise;
+                Module.rcade_set_spinner_resolution(stepResolution);
+
+                // Handle spinner updates
                 spinnerChannel.getPort().onmessage = (event) => {
                     const data = event.data;
                     if (data.type === 'spinners') {
                         Module.rcade_update_spinners(
                             data.spinner1_step_delta || 0,
-                            data.spinner2_step_delta || 0,
-                            data.step_resolution || 64
+                            data.spinner2_step_delta || 0
                         );
                     }
                 };
-
-                // Request initial config to get step_resolution
-                spinnerChannel.getPort().postMessage({ type: 'get_config' });
             } catch (e) {
                 console.warn('Spinner plugin not available:', e);
             }
@@ -310,13 +333,17 @@ void Input::handleInputEvent(const char* eventTypeStr, const char* button, bool 
     }
 }
 
-void Input::updateSpinners(int spinner1_step_delta, int spinner2_step_delta, int step_resolution) {
+void Input::setSpinnerResolution(int step_resolution) {
+    player1_.SPINNER.step_resolution = step_resolution;
+    player2_.SPINNER.step_resolution = step_resolution;
+}
+
+void Input::updateSpinners(int spinner1_step_delta, int spinner2_step_delta) {
     // Update player 1 spinner
     player1_.SPINNER.step_delta += spinner1_step_delta;
-    player1_.SPINNER.step_resolution = step_resolution;
 
     // Update angle using atan2 for proper wrapping
-    float angleIncrement = (spinner1_step_delta / static_cast<float>(step_resolution)) * 2.0f * M_PI;
+    float angleIncrement = (spinner1_step_delta / static_cast<float>(player1_.SPINNER.step_resolution)) * 2.0f * M_PI;
     player1_.SPINNER.angle = atan2(
         sin(player1_.SPINNER.angle + angleIncrement),
         cos(player1_.SPINNER.angle + angleIncrement)
@@ -324,9 +351,8 @@ void Input::updateSpinners(int spinner1_step_delta, int spinner2_step_delta, int
 
     // Update player 2 spinner
     player2_.SPINNER.step_delta += spinner2_step_delta;
-    player2_.SPINNER.step_resolution = step_resolution;
 
-    angleIncrement = (spinner2_step_delta / static_cast<float>(step_resolution)) * 2.0f * M_PI;
+    angleIncrement = (spinner2_step_delta / static_cast<float>(player2_.SPINNER.step_resolution)) * 2.0f * M_PI;
     player2_.SPINNER.angle = atan2(
         sin(player2_.SPINNER.angle + angleIncrement),
         cos(player2_.SPINNER.angle + angleIncrement)
@@ -337,6 +363,7 @@ void Input::updateSpinners(int spinner1_step_delta, int spinner2_step_delta, int
 EMSCRIPTEN_BINDINGS(rcade_input) {
     emscripten::function("rcade_update_input", &rcade_update_input);
     emscripten::function("rcade_handle_input_event", &rcade_handle_input_event);
+    emscripten::function("rcade_set_spinner_resolution", &rcade_set_spinner_resolution);
     emscripten::function("rcade_update_spinners", &rcade_update_spinners);
 }
 
