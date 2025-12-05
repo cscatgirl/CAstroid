@@ -22,7 +22,9 @@ jobs:
           version: latest
       - name: Verify Emscripten installation
         run: emcc --version
-      - name: Build with Emscripten
-        run: make build
+      - name: Download deps
+        run: npm install
+      - name: Build with npm
+        run: npm run build
       - name: Deploy to RCade
         uses: fcjr/rcade/action-deploy@main
