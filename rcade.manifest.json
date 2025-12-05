@@ -1,0 +1,16 @@
+{
+  "$schema": "https://rcade.dev/manifest.schema.json",
+  "name": "CAstroid",
+  "display_name": "CAstroid",
+  "description": "Spinner demo",
+  "visibility": "public",
+  "authors": {
+    "display_name": "Brett"
+  },
+  "dependencies": [
+    {
+      "name": "@rcade/input-classic",
+      "version": "1.0.0"
+    }
+  ]
+}
