@@ -1,0 +1,21 @@
+{
+    "name": "castroid",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Asteroids clone in C++",
+    "type": "module",
+    "scripts": {
+        "dev": "make dev && concurrently \"vite --port 5173 --strictPort\" \"rcade dev http://localhost:5173\"",
+        "build": "make build && vite build"
+    },
+    "devDependencies": {
+        "concurrently": "^9.0.0",
+        "rcade": "^0.0.37",
+        "vite": "^7.2.4"
+    },
+    "dependencies": {
+        "@rcade/sdk": "^0.2.1",
+        "@rcade/plugin-input-classic": "^0.2.1",
+        "@rcade/plugin-input-spinners": "latest"
+    }
+}
