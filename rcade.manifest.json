@@ -11,6 +11,10 @@
     {
       "name": "@rcade/input-classic",
       "version": "1.0.0"
+    },
+    {
+      "name": "@rcade/input-spinners",
+      "version": "1.0.0"
     }
   ]
 }
